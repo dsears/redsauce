@@ -1,4 +1,4 @@
 {
-  "minimumVotes": 1000000,
+  "minimumVotes": 2000,
   "validTitleTypes": ["movie"]
 }

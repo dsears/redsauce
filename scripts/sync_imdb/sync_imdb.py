@@ -54,16 +54,20 @@ with open('title.basics.tsv') as file:
       continue
     genres = ', '.join(row['genres'].split(','))
     rating = ratings[id]
+    try:
+      runtimeMinutes = int(row['runtimeMinutes'])
+    except:
+      runtimeMinutes = 0
     sql = sql_fmt % (q(id),
                      q(row['primaryTitle']),
                      q(row['startYear']),
-                     q(row['runtimeMinutes']),
+                     q(runtimeMinutes),
                      q(genres),
                      q(rating['averageRating']),
                      q(rating['numVotes']),
                      q(row['primaryTitle']),
                      q(row['startYear']),
-                     q(row['runtimeMinutes']),
+                     q(runtimeMinutes),
                      q(genres),
                      q(rating['averageRating']),
                      q(rating['numVotes'])                     
