@@ -53,10 +53,19 @@ while True:
   response = requests.get(url, headers=headers)
   tomato_html = response.text
   soup = BeautifulSoup.BeautifulSoup(tomato_html)
+
+  """
   jsonLdSchema = soup.find('script', {'id': 'jsonLdSchema'})
+  print unicode(jsonLdSchema.text).encode('utf-8')
   jsonLdSchema = json.loads(jsonLdSchema.text)
   tomato_rating = jsonLdSchema['aggregateRating']['ratingValue']
   tomato_reviews = jsonLdSchema['aggregateRating']['reviewCount']
+  """
+  
+  allCriticsNumbers = str(soup.find('div', {'id':'all-critics-numbers'}))
+  tomato_rating = allCriticsNumbers.split('<span class="meter-value superPageFontColor"><span>')[1].split('</span>%</span>')[0]
+  tomato_reviews = allCriticsNumbers.split('<span class="subtle superPageFontColor">Reviews Counted: </span><span>')[1].split('</span>')[0]
+  
   tomato_id = tomato_html.split('mpscall["field[rtid]"]="')[1].split('"; // unique movie/show id')[0]
   
   # Create the meta row if it does not exist
