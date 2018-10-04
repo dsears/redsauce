@@ -8,6 +8,12 @@ import time
 import sys
 import BeautifulSoup
 
+try:
+  assert sys.argv.pop() == "debug"
+  debug = True
+except:
+  debug = False
+
 def q(s):
   return "'%s'" % MySQLdb.escape_string(str(s))
 
@@ -46,27 +52,41 @@ while True:
   assert response.status_code == 200
   omdb_json = response.json()
   assert omdb_json['Response'] == 'True'
+
+  if debug:
+    print '-' * 80
+    print json.dumps(omdb_json)
+    print '-' * 80
+
   
   # Get Rotten Tomatoes data
   url = omdb_json['tomatoURL']
   headers = {'User-Agent': conf['user_agent']}
   response = requests.get(url, headers=headers)
   tomato_html = response.text
-  soup = BeautifulSoup.BeautifulSoup(tomato_html)
+  soup = BeautifulSoup.BeautifulSoup(unicode(tomato_html).encode('utf-8').decode('ascii', 'ignore'))
+  
+  if debug:
+    print '-' * 80
+    print tomato_html
+    print '-' * 80
 
-  """
-  jsonLdSchema = soup.find('script', {'id': 'jsonLdSchema'})
-  print unicode(jsonLdSchema.text).encode('utf-8')
-  jsonLdSchema = json.loads(jsonLdSchema.text)
-  tomato_rating = jsonLdSchema['aggregateRating']['ratingValue']
-  tomato_reviews = jsonLdSchema['aggregateRating']['reviewCount']
-  """
-  
   allCriticsNumbers = str(soup.find('div', {'id':'all-critics-numbers'}))
-  tomato_rating = allCriticsNumbers.split('<span class="meter-value superPageFontColor"><span>')[1].split('</span>%</span>')[0]
-  tomato_reviews = allCriticsNumbers.split('<span class="subtle superPageFontColor">Reviews Counted: </span><span>')[1].split('</span>')[0]
+
+  try:
+    tomato_rating = allCriticsNumbers.split('<span class="meter-value superPageFontColor"><span>')[1].split('</span>%</span>')[0]
+  except:
+    tomato_rating = 0
+
+  try:
+    tomato_reviews = allCriticsNumbers.split('<span class="subtle superPageFontColor">Reviews Counted: </span><span>')[1].split('</span>')[0]
+  except:
+    tomato_reviews = 0
   
-  tomato_id = tomato_html.split('mpscall["field[rtid]"]="')[1].split('"; // unique movie/show id')[0]
+  try:
+    tomato_id = tomato_html.split('mpscall["field[rtid]"]="')[1].split('"; // unique movie/show id')[0]
+  except:
+    tomato_id = 0
   
   # Create the meta row if it does not exist
   sql = "INSERT INTO `imdb_meta` (`id`) VALUES(%s) ON DUPLICATE KEY UPDATE `id`=`id`"
@@ -93,10 +113,9 @@ while True:
   db.commit()
   
   # Print a progress bar while we wait
-  print '#' * conf['sleep_interval']
   for i in range(conf['sleep_interval']):
     time.sleep(1)
-    sys.stdout.write('#')
+    sys.stdout.write('_')
   sys.stdout.write("\n")
   
   
