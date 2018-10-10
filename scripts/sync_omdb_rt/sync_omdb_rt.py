@@ -51,7 +51,20 @@ while True:
   response = requests.get(url, headers=headers)
   assert response.status_code == 200
   omdb_json = response.json()
-  assert omdb_json['Response'] == 'True'
+  
+  try:
+    assert omdb_json['Response'] == 'True'
+  except:
+    print "No OMDB result, skipping", imdb_row['primary_title']
+    sql = "UPDATE `imdb` SET `processed_at` = NOW() WHERE `id` = %s LIMIT 1"
+    sql = sql % (q(imdb_row['id']))
+    cursor.execute(sql)
+    db.commit()
+    for i in range(conf['sleep_interval']):
+      time.sleep(1)
+      sys.stdout.write('_')
+    sys.stdout.write("\n")
+    continue
 
   if debug:
     print '-' * 80
@@ -61,9 +74,12 @@ while True:
   
   # Get Rotten Tomatoes data
   url = omdb_json['tomatoURL']
-  headers = {'User-Agent': conf['user_agent']}
-  response = requests.get(url, headers=headers)
-  tomato_html = response.text
+  if '://' in url:
+    headers = {'User-Agent': conf['user_agent']}
+    response = requests.get(url, headers=headers)
+    tomato_html = response.text
+  else:
+    tomato_html = '<html></html>'
   soup = BeautifulSoup.BeautifulSoup(unicode(tomato_html).encode('utf-8').decode('ascii', 'ignore'))
   
   if debug:

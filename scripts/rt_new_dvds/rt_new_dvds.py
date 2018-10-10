@@ -44,6 +44,7 @@ text = (left + middle + right)[:-2]
 
 movies = json.loads(text)
 for movie in movies:
+
   handle = movie['url'].split('/')[2]
   
   dvd_date = find_closest_date(movie['dvdReleaseDate'])
@@ -83,7 +84,7 @@ for movie in movies:
   except:
     tomato_id = 0
   
-  sql = "insert into rt_dvd (id, handle, dvd_date, discovery_date, tomato_rating, tomato_reviews) values (%s, %s, %s, %s, %s, %s)"
-  sql = sql % (q(tomato_id), q(handle), q(dvd_date), q(discovery_date), q(tomato_rating), q(tomato_reviews))
+  sql = "insert into rt_dvd (id, title, handle, dvd_date, discovery_date, tomato_rating, tomato_reviews) values (%s, %s, %s, %s, %s, %s, %s)"
+  sql = sql % (q(tomato_id), q(movie['title']), q(handle), q(dvd_date), q(discovery_date), q(tomato_rating), q(tomato_reviews))
   cursor.execute(sql)
   db.commit()
